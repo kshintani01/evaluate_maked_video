@@ -4,7 +4,7 @@
 import argparse
 import numpy as np
 from scipy.signal import correlate
-from extract_sequence_features import compute_sequence  # 先ほどのスクリプト
+from generated_movie.preprocessing.extract_sequence_features import compute_sequence  # 先ほどのスクリプト
 
 def estimate_offset(real_seq, gen_seq):
     # ここでは mouth+eye 2次元を合成した1次元信号で推定
