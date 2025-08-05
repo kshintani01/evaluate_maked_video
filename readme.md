@@ -125,15 +125,15 @@ python training/generate_detectors.py
    ```bash
    # features/real.npy, features/gen.npy を統合し training/*.npy を生成
    python << 'EOS'
-  import numpy as np
-  real = np.load('features/real.npy')
-  gen  = np.load('features/gen.npy')
-  X   = np.vstack([real, gen])
-  y   = np.hstack([np.zeros(len(real)), np.ones(len(gen))])
-  np.save('training/X_train.npy', X)
-  np.save('training/y_train.npy', y)
-  print('Saved', X.shape, y.shape)
-  EOS
+import numpy as np
+real = np.load('features/real.npy')
+gen  = np.load('features/gen.npy')
+X   = np.vstack([real, gen])
+y   = np.hstack([np.zeros(len(real)), np.ones(len(gen))])
+np.save('training/X_train.npy', X)
+np.save('training/y_train.npy', y)
+print('Saved', X.shape, y.shape)
+EOS
    ```
 2. 学習実行
 
