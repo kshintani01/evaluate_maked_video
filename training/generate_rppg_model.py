@@ -27,7 +27,7 @@ def main(args):
 
     # 学習 / 検証データ分割
     X_tr, X_val, y_tr, y_val = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.2, random_state=42
     )
 
     # モデル定義

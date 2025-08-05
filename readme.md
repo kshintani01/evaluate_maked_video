@@ -4,38 +4,37 @@
 
 ---
 
-## 📋 ディレクトリ構成
+## 📁 ディレクトリ構成
 
-```
+```plain
 generated_movie/
-├─ preprocessing/           # 前処理関連スクリプト
-│   ├─ shift_videos_trim.py     # 動画をフレーム単位でトリミング（シフト）
-│   ├─ preprocess.py            # リサンプリング・フレーム抽出・空間アライン
-│   ├─ extract_landmarks.py     # 顔ランドマーク抽出
-│   └─ extract_sequence_features.py # 口/目開度時系列抽出
-│   └─ clip_split.py            # クリップファイル生成（FVD用）
+├─ preprocessing/           # 前処理関連
+│   ├─ shift_videos_trim.py       # 動画シフト（フレームトリミング）
+│   ├─ preprocess.py              # リサンプリング・フレーム抽出・アライン
+│   ├─ extract_landmarks.py       # 顔ランドマーク抽出
+│   ├─ extract_sequence_features.py # 口/目開度時系列抽出
+│   └─ clip_split.py              # クリップ生成（FVD用）
 │
-├─ training/                # モデル準備・学習スクリプト
-│   ├─ detectors.py             # Deepfake 検出器定義
-│   ├─ generate_detectors.py    # detectors.pkl 生成
-│   ├─ generate_rppg_features.py# rPPG 特徴量/ラベル生成
-│   └─ generate_rppg_model.py   # rPPG ロジスティック回帰学習
+├─ training/                # モデル準備・学習
+│   ├─ detectors.py               # Deepfake検出器定義
+│   ├─ generate_detectors.py      # detectors.pkl生成
+│   └─ generate_rppg_model.py     # rPPGモデル学習
 │
-├─ evaluation/              # 評価指標計算スクリプト
-│   ├─ compute_fvd.py           # FVD（Fréchet Video Distance）
-│   ├─ compute_nme.py           # NME（Normalized Mean Error）
-│   ├─ compute_dscore.py        # D-Score（Deepfake 判定確率）
-│   ├─ compute_dtw.py           # DTW-norm
-│   ├─ compute_dtw_max_diff.py  # DTW-norm 最大シフト探索
-│   ├─ compute_rppg.py          # rPPG Realness Score
-│   ├─ compute_pseudo_au.py     # Pseudo-AU NME
-│   └─ compute_au_mae.py        # OpenFace AU MAE（オプション）
+├─ evaluation/              # 指標計算
+│   ├─ compute_fvd.py             # FVD
+│   ├─ compute_nme.py             # NME
+│   ├─ compute_dscore.py          # D-Score
+│   ├─ compute_dtw.py             # DTW-norm
+│   ├─ compute_dtw_max_diff.py    # DTWシフト最適化
+│   ├─ compute_rppg.py            # rPPGスコア
+│   ├─ compute_pseudo_au.py       # Pseudo-AU NME
+│   └─ compute_au_mae.py          # AU MAE（OpenFace）
 │
-├─ utils/                   # 共通ユーティリティ
-│   └─ estimate_offset.py       # 時系列相互相関オフセット推定
+├─ utils/                   # ヘルパー関数
+│   └─ estimate_offset.py         # 相互相関オフセット推定
 │
-├─ requirements.txt         # Python 依存ライブラリ一覧
-└─ README.md                # 本ドキュメント
+├─ requirements.txt         # Python依存ライブラリ
+└─ README.md                # このファイル
 ```
 
 ---
@@ -43,95 +42,138 @@ generated_movie/
 ## 🛠️ 必要環境・インストール
 
 ```bash
-# Python3.8 以降推奨
-git clone <リポジトリURL>
-cd generated_movie
-python -m venv venv
+# Python 3.8～3.10 推奨 (MediaPipe は <3.11)
+pyenv install 3.10.12
+pyenv local 3.10.12
+
+# またはシステムの python3.10 を直接指定
+env:
+python3.10 -m venv venv
 source venv/bin/activate
+
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-**追加依存**
+**補足**
 
-- FFmpeg / FFprobe（`preprocessing`）
-- MediaPipe（顔ランドマーク検出）
+* mediapipe は Python >=3.8,<3.11 の環境でインストール可能
+* FFmpeg / FFprobe（preprocessing）
 
 ---
 
-## 🚀 実行手順（例）
+## 🚀 実行手順
 
-### 1. 動画シフト（preprocessing）
+### 1. シフト値の算出
+
+```bash
+python evaluation/compute_dtw_min_diff.py \
+  --real features/real.npy --gen features/gen.npy \
+  --min_shift -30 --max_shift 30
+# 出力例: Max DTW-norm ... at shift 16
+```
+
+### 2. 動画シフト
 
 ```bash
 python preprocessing/shift_videos_trim.py \
-  --real real_0804.mp4 \
-  --gen  Receiver_0804.mp4 \
+  --real real_0804.mp4 --gen Receiver_0804.mp4 \
   --shift 16 --fps 30 \
-  --out_real  real_shifted.mp4 \
-  --out_gen   Receiver_shifted.mp4
+  --out_real real_shifted.mp4 --out_gen Receiver_shifted.mp4
 ```
 
-### 2. 前処理（preprocessing）
+### 3. 前処理
 
 ```bash
 python preprocessing/preprocess.py \
-  --real real_shifted.mp4 \
-  --gen  Receiver_shifted.mp4
+  --real real_shifted.mp4 --gen Receiver_shifted.mp4
 ```
 
-### 3. ランドマーク抽出（preprocessing）
+### 4. ランドマーク抽出
 
 ```bash
 python preprocessing/extract_landmarks.py \
-  --aligned_dir frames/aligned/real \
-  --out_npy    landmarks/real.npy
+  --aligned_dir frames/aligned/real --out_npy landmarks/real.npy
 python preprocessing/extract_landmarks.py \
-  --aligned_dir frames/aligned/gen  \
-  --out_npy    landmarks/gen.npy
+  --aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
 ```
 
-### 4. シーケンス特徴抽出（preprocessing）
+### 5. シーケンス特徴抽出
 
 ```bash
 python preprocessing/extract_sequence_features.py \
   --aligned_real frames/aligned/real \
-  --aligned_gen  frames/aligned/gen  \
-  --out_dir      features
+  --aligned_gen  frames/aligned/gen  --out_dir features
 ```
 
-### 5. モデル準備・学習（training）
+### 6. モデル準備・学習
+
+#### 6.1 Deepfake検出器準備
 
 ```bash
-python training/generate_detectors.py   # detectors.pkl を生成
-python training/generate_rppg_features.py \
-  --real_dir real_videos --gen_dir gen_videos \
-  --out_features X_train.npy --out_labels y_train.npy
-python training/generate_rppg_model.py \
-  --features X_train.npy --labels y_train.npy
+python training/generate_detectors.py
 ```
 
-### 6. 評価指標計算（evaluation）
+#### 6.2 rPPGモデル学習
+
+##### 6.2.1 特徴量・ラベルデータの作成例
+
+以下の手順で `training/X_train.npy` と `training/y_train.npy` を準備できます。
+
+```bash
+# ステップ5のシーケンス特徴抽出実行後
+python preprocessing/extract_sequence_features.py \
+  --aligned_real frames/aligned/real \
+  --aligned_gen  frames/aligned/gen \
+  --out_dir features
+# -> features ディレクトリに real.npy, gen.npy が生成される
+
+# 特徴量とラベルを統合して X_train.npy, y_train.npy を生成
+python - << 'EOS'
+import numpy as np
+# real.npy, gen.npy を読み込む
+real = np.load('features/real.npy')
+gen  = np.load('features/gen.npy')
+# 特徴量行列を縦結合
+X = np.vstack([real, gen])
+# ラベルを作成 (0: 実写, 1: 生成)
+y = np.hstack([np.zeros(len(real)), np.ones(len(gen))])
+# trainingディレクトリへ保存
+np.save('training/X_train.npy', X)
+np.save('training/y_train.npy', y)
+print('Saved X_train.npy', X.shape, 'y_train.npy', y.shape)
+EOS
+```
+
+##### 6.2.2 学習実行
+
+```bash
+python training/generate_rppg_model.py \
+  --features training/X_train.npy \
+  --labels   training/y_train.npy
+```
+
+学習後、`training/rppg_model.pkl` が生成されます。
+
+### 7. 指標計算
 
 ```bash
 python evaluation/compute_fvd.py
 python evaluation/compute_nme.py --real landmarks/real.npy --gen landmarks/gen.npy
 python evaluation/compute_dscore.py
-python evaluation/compute_dtw_max_diff.py --real features/real.npy --gen features/gen.npy --min_shift -20 --max_shift 20
-python evaluation/compute_rppg.py --aligned_dir frames/aligned/gen --model rppg_model.pkl
+python evaluation/compute_dtw.py --real features/real.npy --gen features/gen.npy
+python evaluation/compute_rppg.py --aligned_dir frames/aligned/gen --model training/rppg_model.pkl
 python evaluation/compute_pseudo_au.py --real landmarks/real.npy --gen landmarks/gen.npy
-# (オプション) OpenFace AU MAE:
+# (オプション) OpenFace AU MAE
 python evaluation/compute_au_mae.py
 ```
 
-各スクリプトが実行結果をターミナルに出力します。
+各スクリプトがターミナルに結果を出力します。
 
 ---
 
 ## 📈 開発メモ
 
-- **精度改善**: 検出モデルのファインチューニングやシーケンス特徴の追加。
-- **パラメータ調整**: リサンプル解像度／fps、rPPGのパッチ設定など。
-- **拡張案**: GUI化、自動レポート生成、本来の AU MAE 復活。
-
----
-
+* 精度改善: 検出器ファインチューニング、ランドマーク品質向上
+* パラメータ調整: fps, grid\_size, patch\_size など
+* 拡張案: GUI 化、自動レポート、本物の AU MAE
