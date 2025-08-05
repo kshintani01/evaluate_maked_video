@@ -226,3 +226,5 @@ __pycache__/
 *.tmp
 
 OpenFace/
+clips/
+frames/
