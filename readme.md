@@ -64,32 +64,18 @@ pip install -r requirements.txt
 
 ## 🚀 実行手順
 
-### 1. シフト値の算出
+以下の順序で処理を実行してください。
 
-```bash
-python evaluation/compute_dtw_min_diff.py \
-  --real features/real.npy --gen features/gen.npy \
-  --min_shift -30 --max_shift 30
-# 出力例: Max DTW-norm ... at shift 16
-```
+### 1. 前処理
 
-### 2. 動画シフト
-
-```bash
-python preprocessing/shift_videos_trim.py \
-  --real real_0804.mp4 --gen Receiver_0804.mp4 \
-  --shift 16 --fps 30 \
-  --out_real real_shifted.mp4 --out_gen Receiver_shifted.mp4
-```
-
-### 3. 前処理
+1. 動画のリサンプリング・フレーム抽出・空間アライン
 
 ```bash
 python preprocessing/preprocess.py \
-  --real real_shifted.mp4 --gen Receiver_shifted.mp4
+  --real real_0804.mp4 --gen Receiver_0804.mp4
 ```
 
-### 4. ランドマーク抽出
+2. 顔ランドマーク抽出
 
 ```bash
 python preprocessing/extract_landmarks.py \
@@ -98,7 +84,7 @@ python preprocessing/extract_landmarks.py \
   --aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
 ```
 
-### 5. シーケンス特徴抽出
+3. シーケンス特徴抽出（口/目開度など）
 
 ```bash
 python preprocessing/extract_sequence_features.py \
@@ -106,46 +92,50 @@ python preprocessing/extract_sequence_features.py \
   --aligned_gen  frames/aligned/gen  --out_dir features
 ```
 
-### 6. モデル準備・学習
+### 2. シフト値の算出
 
-#### 6.1 Deepfake検出器準備
+```bash
+python evaluation/compute_dtw_min_diff.py \
+  --real features/real.npy --gen features/gen.npy \
+  --min_shift -30 --max_shift 30
+# 出力例: Min DTW-norm 1.234 at shift -16
+```
+
+### 3. 動画シフト
+
+```bash
+python preprocessing/shift_videos_trim.py \
+  --real real_0804.mp4 --gen Receiver_0804.mp4 \
+  --shift <上記で得たシフト値> --fps 30 \
+  --out-real real_shifted.mp4 --out-gen Receiver_shifted.mp4
+```
+
+### 4. モデル準備・学習
+
+#### 4.1 Deepfake検出器準備
 
 ```bash
 python training/generate_detectors.py
 ```
 
-#### 6.2 rPPGモデル学習
+#### 4.2 rPPGモデル学習
 
-##### 6.2.1 特徴量・ラベルデータの作成例
+1. 特徴量/ラベルデータを作成（ステップ1で生成した `features/*.npy` を利用）
 
-以下の手順で `training/X_train.npy` と `training/y_train.npy` を準備できます。
-
-```bash
-# ステップ5のシーケンス特徴抽出実行後
-python preprocessing/extract_sequence_features.py \
-  --aligned_real frames/aligned/real \
-  --aligned_gen  frames/aligned/gen \
-  --out_dir features
-# -> features ディレクトリに real.npy, gen.npy が生成される
-
-# 特徴量とラベルを統合して X_train.npy, y_train.npy を生成
-python - << 'EOS'
-import numpy as np
-# real.npy, gen.npy を読み込む
-real = np.load('features/real.npy')
-gen  = np.load('features/gen.npy')
-# 特徴量行列を縦結合
-X = np.vstack([real, gen])
-# ラベルを作成 (0: 実写, 1: 生成)
-y = np.hstack([np.zeros(len(real)), np.ones(len(gen))])
-# trainingディレクトリへ保存
-np.save('training/X_train.npy', X)
-np.save('training/y_train.npy', y)
-print('Saved X_train.npy', X.shape, 'y_train.npy', y.shape)
-EOS
-```
-
-##### 6.2.2 学習実行
+   ```bash
+   # features/real.npy, features/gen.npy を統合し training/*.npy を生成
+   python << 'EOS'
+  import numpy as np
+  real = np.load('features/real.npy')
+  gen  = np.load('features/gen.npy')
+  X   = np.vstack([real, gen])
+  y   = np.hstack([np.zeros(len(real)), np.ones(len(gen))])
+  np.save('training/X_train.npy', X)
+  np.save('training/y_train.npy', y)
+  print('Saved', X.shape, y.shape)
+  EOS
+   ```
+2. 学習実行
 
 ```bash
 python training/generate_rppg_model.py \
@@ -153,9 +143,7 @@ python training/generate_rppg_model.py \
   --labels   training/y_train.npy
 ```
 
-学習後、`training/rppg_model.pkl` が生成されます。
-
-### 7. 指標計算
+### 5. 評価指標の計算
 
 ```bash
 python evaluation/compute_fvd.py
@@ -164,7 +152,7 @@ python evaluation/compute_dscore.py
 python evaluation/compute_dtw.py --real features/real.npy --gen features/gen.npy
 python evaluation/compute_rppg.py --aligned_dir frames/aligned/gen --model training/rppg_model.pkl
 python evaluation/compute_pseudo_au.py --real landmarks/real.npy --gen landmarks/gen.npy
-# (オプション) OpenFace AU MAE
+# (オプション) AU MAE
 python evaluation/compute_au_mae.py
 ```
 

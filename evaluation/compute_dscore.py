@@ -6,12 +6,17 @@ import pickle
 import cv2
 import numpy as np
 import time
+import os, sys
 
 """
 Compute D-Score (Deepfake Detector Confidence) with progress and timing.
 Usage:
     python compute_dscore.py
 """
+
+current_dir   = os.path.dirname(os.path.abspath(__file__))
+training_dir  = os.path.join(current_dir, '..', 'training')
+sys.path.insert(0, os.path.abspath(training_dir))
 
 def main():
     # モデルロード
