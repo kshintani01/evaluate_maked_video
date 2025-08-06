@@ -83,43 +83,33 @@ clips/gen
 1. 動画のリサンプリング・フレーム抽出・空間アライン
 
 ```bash
-python preprocessing/preprocess.py \
---real real_0804.mp4 --gen Receiver_0804.mp4
+python preprocessing/preprocess.py --real real_0804.mp4 --gen Receiver_0804.mp4
 ```
 
 2. 顔ランドマーク抽出
 
 ```bash
-python preprocessing/extract_landmarks.py \
---aligned_dir frames/aligned/real --out_npy landmarks/real.npy
-python preprocessing/extract_landmarks.py \
---aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
+python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/real --out_npy landmarks/real.npy
+python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
 ```
 
 3. シーケンス特徴抽出（口/目開度など）
 
 ```bash
-python preprocessing/extract_sequence_features.py \
---aligned_real frames/aligned/real \
---aligned_gen  frames/aligned/gen  --out_dir features
+python preprocessing/extract_sequence_features.py --aligned_real frames/aligned/real --aligned_gen  frames/aligned/gen  --out_dir features
 ```
 
 ### 2. シフト値の算出
 
 ```bash
-python evaluation/compute_dtw_min_diff.py \
---real features/real.npy --gen features/gen.npy \
---min_shift -30 --max_shift 30
+python evaluation/compute_dtw_min_diff.py --real features/real.npy --gen features/gen.npy --min_shift -30 --max_shift 30
 # 出力例: Min DTW-norm 1.234 at shift -16
 ```
 
 ### 3. 動画シフト
 
 ```bash
-python preprocessing/shift_videos_trim.py \
---real real_0804.mp4 --gen Receiver_0804.mp4 \
---shift <上記で得たシフト値> --fps 30 \
---out-real real_shifted.mp4 --out-gen Receiver_shifted.mp4
+python preprocessing/shift_videos_trim.py --real real_0804.mp4 --gen Receiver_0804.mp4 --shift <上記で得たシフト値> --fps 30 --out-real real_shifted.mp4 --out-gen Receiver_shifted.mp4
 ```
 
 ### 4. モデル準備・学習
@@ -136,17 +126,12 @@ python training/train_detectors.py
 1. 特徴量/ラベルデータを作成
 
 ```bash
-python utils/prepare_rppg_dataset.py \
---input-dir features \
---output-features training/X_train.npy \
---output-labels training/y_train.npy
+python utils/prepare_rppg_dataset.py --input-dir features --output-features training/X_train.npy --output-labels training/y_train.npy
 ```
 2. 学習実行
 
 ```bash
-python training/generate_rppg_model.py \
---features training/X_train.npy \
---labels   training/y_train.npy
+python training/generate_rppg_model.py --features training/X_train.npy --labels training/y_train.npy
 ```
 
 ### 5. 評価指標の計算
