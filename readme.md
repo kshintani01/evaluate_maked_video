@@ -66,6 +66,18 @@ pip install -r requirements.txt
 
 以下の順序で処理を実行してください。
 
+### 前処理前のディレクトリ作成
+以下の6つのディレクトリをあらかじめ作成してください。
+
+```bash
+mkdir -p frames/raw/real \
+         frames/raw/gen \
+         frames/aligned/real \
+         frames/aligned/gen \
+         clips/real \
+         clips/gen
+```
+
 ### 1. 前処理
 
 1. 動画のリサンプリング・フレーム抽出・空間アライン
