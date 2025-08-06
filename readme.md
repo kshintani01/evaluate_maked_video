@@ -159,7 +159,7 @@ python evaluation/compute_pseudo_au.py --real landmarks/real.npy --gen landmarks
 # (オプション) AU MAE
 python evaluation/compute_au_mae.py
 # 現在、動作しない
-python evaluation/compute_rppg.py --aligned_dir frames/aligned/gen --model training/rppg_model.pkl
+python evaluation/compute_rppg.py --aligned_dir frames/aligned/gen --model rppg_model.pkl
 ```
 
 各スクリプトがターミナルに結果を出力します。
