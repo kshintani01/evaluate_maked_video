@@ -25,12 +25,24 @@ def get_duration(path):
     return float(out.stdout)
 
 def trim_and_encode(input_path, output_path, trim_frames, fps, crf, bitrate, keep_audio):
-    # 先頭 trim_frames フレームを秒数に変換
+    print(f"[DEBUG] trim_and_encode called")
+    print(f"  input_path   = {input_path}")
+    print(f"  output_path  = {output_path}")
+    print(f"  trim_frames  = {trim_frames}")
+    print(f"  fps          = {fps}")
+    # フレーム→秒に変換
     start = trim_frames / fps
-    # 入力全長取得
-    total = get_duration(input_path)
+    print(f"  -> start     = {start:.3f}s")
+    # ffprobe で動画長を取る
+    try:
+        total = get_duration(input_path)
+    except Exception as e:
+       print(f"[ERROR] get_duration failed for {input_path}: {e}")
+       sys.exit(1)
+    print(f"  -> total     = {total:.3f}s")
     # 切り落とし後の長さ
     duration = total - start
+    print(f"  -> duration  = {duration:.3f}s")
     # FFmpeg コマンド組み立て
     cmd = [
         'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
