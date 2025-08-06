@@ -71,11 +71,11 @@ pip install -r requirements.txt
 
 ```bash
 mkdir -p frames/raw/real \
-         frames/raw/gen \
-         frames/aligned/real \
-         frames/aligned/gen \
-         clips/real \
-         clips/gen
+frames/raw/gen \
+frames/aligned/real \
+frames/aligned/gen \
+clips/real \
+clips/gen
 ```
 
 ### 1. 前処理
@@ -84,32 +84,32 @@ mkdir -p frames/raw/real \
 
 ```bash
 python preprocessing/preprocess.py \
-  --real real_0804.mp4 --gen Receiver_0804.mp4
+--real real_0804.mp4 --gen Receiver_0804.mp4
 ```
 
 2. 顔ランドマーク抽出
 
 ```bash
 python preprocessing/extract_landmarks.py \
-  --aligned_dir frames/aligned/real --out_npy landmarks/real.npy
+--aligned_dir frames/aligned/real --out_npy landmarks/real.npy
 python preprocessing/extract_landmarks.py \
-  --aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
+--aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
 ```
 
 3. シーケンス特徴抽出（口/目開度など）
 
 ```bash
 python preprocessing/extract_sequence_features.py \
-  --aligned_real frames/aligned/real \
-  --aligned_gen  frames/aligned/gen  --out_dir features
+--aligned_real frames/aligned/real \
+--aligned_gen  frames/aligned/gen  --out_dir features
 ```
 
 ### 2. シフト値の算出
 
 ```bash
 python evaluation/compute_dtw_min_diff.py \
-  --real features/real.npy --gen features/gen.npy \
-  --min_shift -30 --max_shift 30
+--real features/real.npy --gen features/gen.npy \
+--min_shift -30 --max_shift 30
 # 出力例: Min DTW-norm 1.234 at shift -16
 ```
 
@@ -117,9 +117,9 @@ python evaluation/compute_dtw_min_diff.py \
 
 ```bash
 python preprocessing/shift_videos_trim.py \
-  --real real_0804.mp4 --gen Receiver_0804.mp4 \
-  --shift <上記で得たシフト値> --fps 30 \
-  --out-real real_shifted.mp4 --out-gen Receiver_shifted.mp4
+--real real_0804.mp4 --gen Receiver_0804.mp4 \
+--shift <上記で得たシフト値> --fps 30 \
+--out-real real_shifted.mp4 --out-gen Receiver_shifted.mp4
 ```
 
 ### 4. モデル準備・学習
@@ -132,27 +132,20 @@ python training/generate_detectors.py
 
 #### 4.2 rPPGモデル学習
 
-1. 特徴量/ラベルデータを作成（ステップ1で生成した `features/*.npy` を利用）
+1. 特徴量/ラベルデータを作成
 
-   ```bash
-   # features/real.npy, features/gen.npy を統合し training/*.npy を生成
-   python << 'EOS'
-import numpy as np
-real = np.load('features/real.npy')
-gen  = np.load('features/gen.npy')
-X   = np.vstack([real, gen])
-y   = np.hstack([np.zeros(len(real)), np.ones(len(gen))])
-np.save('training/X_train.npy', X)
-np.save('training/y_train.npy', y)
-print('Saved', X.shape, y.shape)
-EOS
-   ```
+```bash
+python utils/prepare_rppg_dataset.py \
+--input-dir features \
+--output-features training/X_train.npy \
+--output-labels training/y_train.npy
+```
 2. 学習実行
 
 ```bash
 python training/generate_rppg_model.py \
-  --features training/X_train.npy \
-  --labels   training/y_train.npy
+--features training/X_train.npy \
+--labels   training/y_train.npy
 ```
 
 ### 5. 評価指標の計算
