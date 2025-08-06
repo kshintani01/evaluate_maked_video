@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 def run_cmd(cmd):
+    print(f"[DEBUG] running: {' '.join(cmd)}")
     try:
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as e:
