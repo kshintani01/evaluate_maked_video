@@ -1,4 +1,4 @@
-# Real Communication 動画評価パイプライン
+# 生成動画評価パイプライン
 
 本プロジェクトは、実写動画と生成動画を比較し、6つの評価指標を一貫して算出するパイプラインです。各ステップをスクリプト化し、独立して実行・テストできる構成になっています。
 
@@ -146,14 +146,15 @@ python training/generate_rppg_model.py \
 ### 5. 評価指標の計算
 
 ```bash
-python evaluation/compute_fvd.py
+python evaluation/compute_fvd.py # 10-20分かかります
 python evaluation/compute_nme.py --real landmarks/real.npy --gen landmarks/gen.npy
-python evaluation/compute_dscore.py
+python evaluation/compute_dscore.py # 3分程度かかります
 python evaluation/compute_dtw.py --real features/real.npy --gen features/gen.npy
-python evaluation/compute_rppg.py --aligned_dir frames/aligned/gen --model training/rppg_model.pkl
 python evaluation/compute_pseudo_au.py --real landmarks/real.npy --gen landmarks/gen.npy
 # (オプション) AU MAE
 python evaluation/compute_au_mae.py
+# 現在、動作しない
+python evaluation/compute_rppg.py --aligned_dir frames/aligned/gen --model training/rppg_model.pkl
 ```
 
 各スクリプトがターミナルに結果を出力します。
