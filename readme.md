@@ -128,6 +128,7 @@ python preprocessing/shift_videos_trim.py \
 
 ```bash
 python training/generate_detectors.py
+python training/train_detectors.py
 ```
 
 #### 4.2 rPPGモデル学習
