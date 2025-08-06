@@ -219,7 +219,7 @@ __pycache__/
 *.mp4
 
 # Ignore text files
-*.txt
+concat_list.txt
 
 # Ignore other temporary files
 *.log

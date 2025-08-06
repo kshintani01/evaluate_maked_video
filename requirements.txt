@@ -1,0 +1,12 @@
+numpy
+opencv-python
+scipy
+dtw-python
+mediapipe
+torch
+torchvision
+pytorchvideo
+pandas
+scikit-learn
+timm
+pillow
