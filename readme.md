@@ -139,7 +139,7 @@ python training/generate_rppg_model.py --features training/X_train.npy --labels 
 ```bash
 python evaluation/compute_fvd.py # 10-20分かかります
 python evaluation/compute_nme.py --real landmarks/real.npy --gen landmarks/gen.npy
-python evaluation/compute_dscore.py # 3分程度かかります
+python evaluation/compute_dscore.py --detectors detectors.pkl --real "frames/aligned/real/*.png" --gen "frames/aligned/gen/*.png" # 3分程度かかります
 python evaluation/compute_dtw.py --real features/real.npy --gen features/gen.npy
 python evaluation/compute_pseudo_au.py --real landmarks/real.npy --gen landmarks/gen.npy
 # (オプション) AU MAE
