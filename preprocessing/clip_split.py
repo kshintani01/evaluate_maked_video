@@ -11,5 +11,5 @@ def split_clips(src_dir, dst_dir, clip_size=16):
         # 例：clip_0001.npz で保存
         np.savez(f"{dst_dir}/clip_{i:04d}.npz", frames=clip)
 
-split_clips("frames/real", "clips/real", clip_size=16)
-split_clips("frames/Receiver",  "clips/Receiver",  clip_size=16)
+split_clips("frames/aligned/real", "clips/real", clip_size=16)
+split_clips("frames/aligned/Receiver",  "clips/Receiver",  clip_size=16)

@@ -89,21 +89,20 @@ python preprocessing/preprocess.py --real real_0804.mp4 --gen Receiver_0804.mp4
 2. 顔ランドマーク抽出
 
 ```bash
-python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/real --out_npy landmarks/real.npy
-python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
+python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/real --out_npy landmarks/real_tmp.npy
+python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/gen  --out_npy landmarks/gen_tmp.npy
 ```
 
 3. シーケンス特徴抽出（口/目開度など）
 
 ```bash
-python preprocessing/extract_sequence_features.py --aligned_real frames/aligned/real --aligned_gen  frames/aligned/gen  --out_dir features
+python preprocessing/extract_sequence_features.py --aligned_real frames/aligned/real --aligned_gen  frames/aligned/gen  --out_dir features_tmp
 ```
 
 ### 2. シフト値の算出
 
 ```bash
-python evaluation/compute_dtw_min_diff.py --real features/real.npy --gen features/gen.npy --min_shift -30 --max_shift 30
-# 出力例: Min DTW-norm 1.234 at shift -16
+python evaluation/compute_dtw_min_diff.py --real features_tmp/real.npy --gen features_tmp/gen.npy --min_shift -30 --max_shift 30
 ```
 
 ### 3. 動画シフト
@@ -112,16 +111,43 @@ python evaluation/compute_dtw_min_diff.py --real features/real.npy --gen feature
 python preprocessing/shift_videos_trim.py --real real_0804.mp4 --gen Receiver_0804.mp4 --shift <上記で得たシフト値> --fps 30 --out-real real_shifted.mp4 --out-gen Receiver_shifted.mp4
 ```
 
-### 4. モデル準備・学習
+### 4. シフト後の前処理
 
-#### 4.1 Deepfake検出器準備
+1. アライン済みフレーム抽出
+
+```bash
+python preprocessing/preprocess.py --real real_shifted.mp4 --gen Receiver_shifted.mp4
+```
+
+2. 顔ランドマーク再抽出
+
+```bash
+python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/real --out_npy landmarks/real.npy
+python preprocessing/extract_landmarks.py --aligned_dir frames/aligned/gen  --out_npy landmarks/gen.npy
+```
+
+3. シーケンス再特徴抽出（口/目開度など）
+
+```bash
+python preprocessing/extract_sequence_features.py --aligned_real frames/aligned/real --aligned_gen  frames/aligned/gen  --out_dir features
+```
+
+4. FVD用クリップ生成
+
+```bash
+python preprocessing/clip_split.py
+```
+
+### 5. モデル準備・学習
+
+#### 5.1 Deepfake検出器準備
 
 ```bash
 python training/generate_detectors.py
 python training/train_detectors.py
 ```
 
-#### 4.2 rPPGモデル学習
+#### 5.2 rPPGモデル学習
 
 1. 特徴量/ラベルデータを作成
 
@@ -134,7 +160,7 @@ python utils/prepare_rppg_dataset.py --input-dir features --output-features trai
 python training/generate_rppg_model.py --features training/X_train.npy --labels training/y_train.npy
 ```
 
-### 5. 評価指標の計算
+### 6. 評価指標の計算
 
 ```bash
 python evaluation/compute_fvd.py # 10-20分かかります
