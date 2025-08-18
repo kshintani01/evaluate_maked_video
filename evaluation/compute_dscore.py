@@ -20,9 +20,9 @@ def load_detectors(pkl_path: str):
     print(f"[D-Score] Loaded {len(detectors)} detectors in {time.perf_counter()-t0:.2f}s")
     return detectors
 
-def list_frames(dir_glob: str):
-    paths = sorted(glob.glob(dir_glob))
-    print(f"[Frames] {dir_glob} -> {len(paths)} frames")
+def list_frames(dir: str):
+    paths = sorted(glob.glob(dir))
+    print(f"[Frames] {dir} -> {len(paths)} frames")
     return paths
 
 def infer_prob_real(detectors, frame_paths):
@@ -75,8 +75,8 @@ def main():
 
     detectors = load_detectors(args.detectors)
 
-    real_paths = list_frames(args.real_glob)
-    gen_paths  = list_frames(args.gen_glob)
+    real_paths = list_frames(args.real)
+    gen_paths  = list_frames(args.gen)
 
     if len(real_paths) == 0 and len(gen_paths) == 0:
         print("[Error] No frames found for both real and gen. Check paths.")
