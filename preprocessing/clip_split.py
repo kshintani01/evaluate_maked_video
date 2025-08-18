@@ -12,4 +12,4 @@ def split_clips(src_dir, dst_dir, clip_size=16):
         np.savez(f"{dst_dir}/clip_{i:04d}.npz", frames=clip)
 
 split_clips("frames/aligned/real", "clips/real", clip_size=16)
-split_clips("frames/aligned/Receiver",  "clips/Receiver",  clip_size=16)
+split_clips("frames/aligned/gen",  "clips/gen",  clip_size=16)
