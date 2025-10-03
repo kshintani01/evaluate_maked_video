@@ -13,7 +13,19 @@ def compute_sequence(aligned_dir):
     seq = []
     face = mp_face.FaceMesh(static_image_mode=True)
     for fn in sorted(os.listdir(aligned_dir)):
-        img = cv2.imread(os.path.join(aligned_dir, fn))
+        # 画像ファイル以外をスキップ（.DS_Store など）
+        if not fn.lower().endswith(('.png', '.jpg', '.jpeg')):
+            continue
+            
+        img_path = os.path.join(aligned_dir, fn)
+        img = cv2.imread(img_path)
+        
+        # 画像が正常に読み込めない場合のエラーハンドリング
+        if img is None:
+            print(f"Warning: Could not read image {img_path}")
+            seq.append([0.0, 0.0])  # デフォルト値を追加
+            continue
+            
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         res = face.process(rgb)
         if not res.multi_face_landmarks:

@@ -39,7 +39,18 @@ def detect_align(in_dir, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     face = mp_face.FaceMesh(static_image_mode=True)
     for fn in sorted(os.listdir(in_dir)):
-        img = cv2.imread(os.path.join(in_dir,fn))
+        # 画像ファイル以外をスキップ（.DS_Store など）
+        if not fn.lower().endswith(('.png', '.jpg', '.jpeg')):
+            continue
+        
+        img_path = os.path.join(in_dir, fn)
+        img = cv2.imread(img_path)
+        
+        # 画像が正常に読み込めない場合のエラーハンドリング
+        if img is None:
+            print(f"Warning: Could not read image {img_path}")
+            continue
+            
         rgb = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         res = face.process(rgb)
         if not res.multi_face_landmarks: continue
@@ -55,10 +66,16 @@ def detect_align(in_dir, out_dir):
 
 def make_clips(aln_dir, clip_dir, size=16):
     os.makedirs(clip_dir, exist_ok=True)
-    files = sorted(os.listdir(aln_dir))
+    files = sorted([f for f in os.listdir(aln_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
     for i in range(len(files)-size+1):
-        clip = [cv2.imread(os.path.join(aln_dir,files[i+j])) for j in range(size)]
-        np.savez(os.path.join(clip_dir,f"clip_{i:04d}.npz"),frames=np.stack(clip))
+        clip = []
+        for j in range(size):
+            img_path = os.path.join(aln_dir, files[i+j])
+            img = cv2.imread(img_path)
+            if img is not None:
+                clip.append(img)
+        if len(clip) == size:  # 全ての画像が正常に読み込めた場合のみ保存
+            np.savez(os.path.join(clip_dir,f"clip_{i:04d}.npz"),frames=np.stack(clip))
 
 def main():
     p = argparse.ArgumentParser()
