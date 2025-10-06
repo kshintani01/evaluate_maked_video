@@ -4,15 +4,30 @@ Windows環境でreadmeの複雑な手順をワンクリックで実行できる�
 
 ## 📁 Windows用ファイル
 
+### 🤖 完全自動化版（推奨）
+- `run_evaluation_pipeline_auto.py` - **完全自動化メインスクリプト**
+- `quick_run_auto.bat` - **完全自動化バッチファイル**
+
+### 📋 手動入力版（従来版）
 - `run_evaluation_pipeline_windows.py` - Windows対応メインスクリプト
 - `quick_run.bat` - Windows用バッチファイル
 
 ## 🎯 最も簡単な使用方法
 
-### コマンドプロンプト/PowerShellから実行
+### 🤖 完全自動化版（手動入力不要！）
 
 ```cmd
-# シンプルな実行（推奨）
+# 🌟 真のワンクリック実行（推奨）
+quick_run_auto.bat real_0804.mp4 Receiver_0804.mp4
+
+# 時間短縮版（FVDとモデル学習をスキップ）
+quick_run_auto.bat real_0804.mp4 Receiver_0804.mp4 --skip-fvd --skip-models
+```
+
+### 📋 従来版（DTWシフト値の手動入力が必要）
+
+```cmd
+# シンプルな実行
 quick_run.bat real_0804.mp4 Receiver_0804.mp4
 
 # 時間短縮版（FVDとモデル学習をスキップ）
@@ -21,8 +36,18 @@ quick_run.bat real_0804.mp4 Receiver_0804.mp4 --skip-fvd --skip-models
 
 ### Pythonスクリプトを直接実行
 
+#### 🤖 完全自動化版
 ```cmd
-# 基本実行
+# 完全自動実行（手動入力不要）
+python run_evaluation_pipeline_auto.py --real real_0804.mp4 --gen Receiver_0804.mp4
+
+# オプション付き完全自動実行
+python run_evaluation_pipeline_auto.py --real real_0804.mp4 --gen Receiver_0804.mp4 --skip-models --skip-fvd
+```
+
+#### 📋 従来版
+```cmd
+# 基本実行（DTWシフト値の手動入力が必要）
 python run_evaluation_pipeline_windows.py --real real_0804.mp4 --gen Receiver_0804.mp4
 
 # オプション付き実行
@@ -49,6 +74,11 @@ Windows用の仮想環境パスを自動検出：
 ### 4. パス区切り文字
 - Windows環境でのバックスラッシュ`\`に対応
 - `pathlib.Path`を使用してOS非依存のパス処理
+
+### 5. 🤖 完全自動化対応（NEW！）
+- **DTW結果の自動解析**: 正規表現で最適シフト値を抽出
+- **手動入力完全排除**: ユーザーの待機時間ゼロ
+- **真のワンクリック実行**: バッチファイル実行だけで完了
 
 ## ⚠️ Windows環境での前提条件
 
@@ -138,8 +168,25 @@ macOS/Linux版と同じ評価指標が実行されます：
 - `frames\` - 抽出されたフレーム画像
 - `clips\` - FVD用クリップ
 
-## 🔄 macOS/Linux版との互換性
+## 🤖 完全自動化版の特徴
+
+| 項目 | 従来版 | 🤖 完全自動化版 |
+|------|--------|-----------------|
+| **DTW計算** | ✅ 自動実行 | ✅ 自動実行 |
+| **シフト値抽出** | ❌ 手動入力必要 | ✅ **自動解析・抽出** |
+| **動画調整** | ✅ 自動実行 | ✅ 自動実行 |
+| **評価指標計算** | ✅ 自動実行 | ✅ 自動実行 |
+| **ユーザー操作** | � シフト値入力待ち | 🤖 **完全無人実行** |
+
+### 自動化の仕組み
+1. **DTW結果をキャプチャ** - コマンド出力を自動取得
+2. **正規表現による解析** - 「Min DTW-norm X.XXX at shift Y」パターンを検出
+3. **最適値の自動抽出** - シフト値を自動で数値として抽出
+4. **フォールバック処理** - 解析失敗時はデフォルト値0を使用
+
+## �🔄 macOS/Linux版との互換性
 
 - 同じPythonスクリプトが両OS で動作
 - プラットフォーム自動検出により適切なコマンド選択
 - ファイルパス処理がOS非依存
+- **完全自動化機能も両OS対応**
