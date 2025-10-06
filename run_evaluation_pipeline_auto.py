@@ -54,6 +54,22 @@ def extract_optimal_shift(dtw_output):
     """DTW計算結果から最適シフト値を自動抽出"""
     print("\n🤖 DTW結果を自動解析中...")
     
+    # dtw_outputがNoneまたは空の場合のチェック
+    if dtw_output is None:
+        print("⚠️  DTW出力がNoneです。デフォルト値 0 を使用します。")
+        return 0
+    
+    if not isinstance(dtw_output, str):
+        print(f"⚠️  DTW出力が文字列ではありません（型: {type(dtw_output)}）。デフォルト値 0 を使用します。")
+        return 0
+    
+    if len(dtw_output.strip()) == 0:
+        print("⚠️  DTW出力が空です。デフォルト値 0 を使用します。")
+        return 0
+    
+    print("📋 DTW出力内容（最初の500文字）:")
+    print(dtw_output[:500] + "..." if len(dtw_output) > 500 else dtw_output)
+    
     # パターン1: "Min DTW-norm X.XXX at shift Y" を検索
     pattern1 = r"Min DTW-norm\s+[\d.]+\s+at\s+shift\s+(-?\d+)"
     match1 = re.search(pattern1, dtw_output)
@@ -87,6 +103,8 @@ def extract_optimal_shift(dtw_output):
     
     # パターン3: デフォルト値
     print("⚠️  DTW結果を解析できませんでした。デフォルト値 0 を使用します。")
+    print("💡 手動でDTWスクリプトを実行して結果を確認してください:")
+    print("   python evaluation/compute_dtw_min_diff_improved.py --real features_tmp/real.npy --gen features_tmp/gen.npy --min_shift -30 --max_shift 30 --remove_invalid")
     return 0
 
 
@@ -218,18 +236,32 @@ def main():
         # 2. DTWによるシフト値算出（完全自動化）
         # ==========================================
         print("\n🤖 DTWによる動画のずれ調整 - 完全自動処理")
-        dtw_result = run_command(
-            f"{python_cmd} evaluation/compute_dtw_min_diff_improved.py --real features_tmp/real.npy --gen features_tmp/gen.npy --min_shift {args.min_shift} --max_shift {args.max_shift} --remove_invalid",
-            "5. DTWシフト値の算出（改良版）",
-            capture_output=True
-        )
+        try:
+            dtw_result = run_command(
+                f"{python_cmd} evaluation/compute_dtw_min_diff_improved.py --real features_tmp/real.npy --gen features_tmp/gen.npy --min_shift {args.min_shift} --max_shift {args.max_shift} --remove_invalid",
+                "5. DTWシフト値の算出（改良版）",
+                capture_output=True,
+                check=False  # エラーでも続行
+            )
+        except Exception as e:
+            print(f"❌ DTW計算でエラーが発生しました: {e}")
+            print("デフォルトシフト値 0 を使用して続行します。")
+            dtw_result = type('obj', (object,), {'stdout': None, 'stderr': str(e), 'returncode': 1})()
         
-        # DTW出力を表示
+        # DTW出力を表示と確認
         print("📊 DTW計算結果:")
-        print(dtw_result.stdout)
+        if dtw_result.stdout:
+            print(dtw_result.stdout)
+            dtw_output = dtw_result.stdout
+        else:
+            print("⚠️  標準出力が空です。標準エラー出力を確認します:")
+            if dtw_result.stderr:
+                print("標準エラー出力:")
+                print(dtw_result.stderr)
+            dtw_output = dtw_result.stderr if dtw_result.stderr else ""
         
         # 最適シフト値を自動抽出
-        shift_value = extract_optimal_shift(dtw_result.stdout)
+        shift_value = extract_optimal_shift(dtw_output)
         
         print(f"\n🎯 自動決定されたシフト値: {shift_value} フレーム")
         if shift_value > 0:
