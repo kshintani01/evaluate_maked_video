@@ -5,7 +5,8 @@ Windows環境でreadmeの複雑な手順をワンクリックで実行できる�
 ## 📁 Windows用ファイル
 
 ### 🤖 完全自動化版（推奨）
-- `run_evaluation_pipeline_auto.py` - **完全自動化メインスクリプト**
+- `run_evaluation_pipeline_auto.py` - **完全自動化メインスクリプト**（クロスプラットフォーム）
+- `run_evaluation_pipeline_windows_auto.py` - **Windows専用完全自動化スクリプト**（推奨）
 - `quick_run_auto.bat` - **完全自動化バッチファイル**
 
 ### 📋 手動入力版（従来版）
@@ -17,14 +18,17 @@ Windows環境でreadmeの複雑な手順をワンクリックで実行できる�
 ### 🤖 完全自動化版（手動入力不要！）
 
 ```cmd
-# 🌟 真のワンクリック実行（推奨）
-.\quick_run_auto.bat real_0804.mp4 Receiver_0804.mp4
+# 🌟 Windows専用完全自動化版（最も推奨）
+python run_evaluation_pipeline_windows_auto.py --real real_0804.mp4 --gen Receiver_0804.mp4
 
-# または直接Pythonスクリプト実行（より確実）
+# クロスプラットフォーム版
 python run_evaluation_pipeline_auto.py --real real_0804.mp4 --gen Receiver_0804.mp4
 
+# バッチファイル版
+.\quick_run_auto.bat real_0804.mp4 Receiver_0804.mp4
+
 # 時間短縮版（FVDとモデル学習をスキップ）
-python run_evaluation_pipeline_auto.py --real real_0804.mp4 --gen Receiver_0804.mp4 --skip-fvd --skip-models
+python run_evaluation_pipeline_windows_auto.py --real real_0804.mp4 --gen Receiver_0804.mp4 --skip-fvd --skip-models
 ```
 
 ### 📋 従来版（DTWシフト値の手動入力が必要）

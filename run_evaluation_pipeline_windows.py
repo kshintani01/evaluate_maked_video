@@ -124,7 +124,7 @@ def main():
                        help="生成動画ファイル名 (例: Receiver_0804.mp4)")
     parser.add_argument("--fps", type=int, default=30,
                        help="フレームレート (デフォルト: 30)")
-    parser.add_argument("--min-shift", type=int, default=-29,
+    parser.add_argument("--min-shift", type=int, default=-20,
                        help="DTW最小シフト値 (デフォルト: -30)")
     parser.add_argument("--max-shift", type=int, default=20,
                        help="DTW最大シフト値 (デフォルト: 30)")
